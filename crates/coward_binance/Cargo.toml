@@ -8,7 +8,6 @@ edition = "2018"
 [dependencies]
 coward_exchange = { path = "../coward_exchange", version = "0.1.0" }
 rust_decimal = "1.14"
-rust_decimal_macros = "1.14"
 serde = { version = "1.0", features = ["derive"] }
 hmac = "0.11"
 sha2 = "0.9"

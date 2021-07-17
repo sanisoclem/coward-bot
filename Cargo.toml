@@ -13,6 +13,7 @@ members = ["crates/*"]
 [dependencies]
 confy = "0.4"
 serde = { version = "1.0", features = ["derive"] }
+rust_decimal = "1.14"
 coward_exchange = {path = "crates/coward_exchange", version = "0.1.0" }
 coward_binance = {path = "crates/coward_binance", version = "0.1.0" }
 

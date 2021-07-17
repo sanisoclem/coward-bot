@@ -1,6 +1,8 @@
 use rust_decimal::prelude::*;
 use std::{
   convert::{TryFrom, TryInto},
+  collections::HashMap,
+  time::Instant,
   fmt,
 };
 
@@ -83,7 +85,23 @@ pub struct TradeFee {
   pub taker_commission: Percent,
 }
 
+pub struct Trade {
+  id: String,
+  price: Decimal,
+  quantity: Decimal,
+  quote_quantity: Decimal,
+  commission: Decimal,
+  time: Instant,
+  is_buyer: bool
+}
+
+pub struct AccountBalances(HashMap<TickerSymbol, Decimal>);
+
 pub trait Exchange {
   type Error;
   fn get_trade_fee(&self, pair: &TradingPair) -> Result<TradeFee, Self::Error>;
+  fn is_up(&self) -> bool;
+  fn get_balances() -> AccountBalances;
+  fn get_trades() -> Vec<Trade>;
+
 }

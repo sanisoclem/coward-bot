@@ -57,6 +57,16 @@ impl Binance {
 impl Exchange for Binance {
   type Error = BinanceError;
 
+  fn is_up(&self) -> bool {
+    unimplemented!()
+  }
+  fn get_balances() -> AccountBalances {
+    unimplemented!()
+  }
+  fn get_trades() -> Vec<Trade> {
+    unimplemented!()
+  }
+
   fn get_trade_fee(&self, pair: &TradingPair) -> Result<TradeFee, Self::Error> {
     let client = reqwest::blocking::Client::new();
     let query_string = format!("symbol={}&timestamp={}", pair, get_timestamp());
