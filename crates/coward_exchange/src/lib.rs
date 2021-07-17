@@ -19,6 +19,7 @@ impl Percent {
 #[derive(Debug)]
 pub enum ExchangeError {
   UnsupportedTickerSymbol(String),
+  HttpError(String),
   Unknown(String),
 }
 
@@ -83,5 +84,6 @@ pub struct TradeFee {
 }
 
 pub trait Exchange {
-  fn get_trade_fees(&self, pair: &TradingPair) -> Result<TradeFee, ExchangeError>;
+  type Error;
+  fn get_trade_fee(&self, pair: &TradingPair) -> Result<TradeFee, Self::Error>;
 }

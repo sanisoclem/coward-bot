@@ -1,41 +1,29 @@
+mod models;
+mod util;
+
 use coward_exchange::*;
-use hmac::{Hmac, Mac, NewMac};
-use rust_decimal::prelude::*;
-use serde::{Deserialize, Serialize};
-use sha2::Sha256;
-use std::{
-  convert::TryInto,
-  fmt::Write,
-  time::{SystemTime, UNIX_EPOCH},
-};
-
-type HmacSha256 = Hmac<Sha256>;
-
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct BinanceTradeFee {
-  pub symbol: String,
-  pub maker_commission: Decimal,
-  pub taker_commission: Decimal,
-}
+use std::convert::TryInto;
+use util::*;
 
 pub enum BinanceEnvironment {
   TestNet,
   Live,
 }
 
-fn get_timestamp() -> u128 {
-  SystemTime::now()
-    .duration_since(UNIX_EPOCH)
-    .expect("Time went backwards")
-    .as_millis()
+#[derive(Debug)]
+pub enum BinanceError {
+  Http(reqwest::Error),
+  Exchange(ExchangeError),
 }
-fn encode_hex(bytes: &[u8]) -> String {
-  let mut s = String::with_capacity(bytes.len() * 2);
-  for &b in bytes {
-    write!(&mut s, "{:02x}", b).unwrap();
+impl From<reqwest::Error> for BinanceError {
+  fn from(err: reqwest::Error) -> Self {
+    BinanceError::Http(err)
   }
-  s
+}
+impl From<ExchangeError> for BinanceError {
+  fn from(err: ExchangeError) -> Self {
+    BinanceError::Exchange(err)
+  }
 }
 
 pub struct Binance {
@@ -57,10 +45,7 @@ impl Binance {
   }
 
   pub fn sign_bytes(&self, bytes: &[u8]) -> Vec<u8> {
-    let mut mac = HmacSha256::new_from_slice(self.api_secret.as_bytes())
-      .expect("HMAC can take key of any size");
-    mac.update(bytes);
-    mac.finalize().into_bytes().to_vec()
+    sign_bytes(self.api_secret.as_bytes(), bytes)
   }
 
   pub fn sign(&self, value: &str) -> String {
@@ -70,7 +55,9 @@ impl Binance {
 }
 
 impl Exchange for Binance {
-  fn get_trade_fees(&self, pair: &TradingPair) -> Result<TradeFee, ExchangeError> {
+  type Error = BinanceError;
+
+  fn get_trade_fee(&self, pair: &TradingPair) -> Result<TradeFee, Self::Error> {
     let client = reqwest::blocking::Client::new();
     let query_string = format!("symbol={}&timestamp={}", pair, get_timestamp());
     let signature = self.sign(&query_string);
@@ -80,10 +67,9 @@ impl Exchange for Binance {
         self.url, query_string, signature
       ))
       .header("X-MBX-APIKEY", &self.api_key)
-      .send()
-      .unwrap()
-      .json::<Vec<BinanceTradeFee>>()
-      .unwrap();
+      .send()?
+      .error_for_status()?
+      .json::<Vec<models::BinanceTradeFee>>()?;
 
     let result = &results[0];
 

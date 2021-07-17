@@ -1,15 +1,26 @@
 use coward_binance::*;
 use coward_exchange::*;
-fn main() {
-  // get trading fees
-  let api_key = "";
-  let api_secret = "";
-  let exchange = Binance::create(api_key, api_secret, BinanceEnvironment::Live);
+use serde::{Deserialize, Serialize};
 
-  let test = exchange.get_trade_fees(&TradingPair::create(TickerSymbol::ETH, TickerSymbol::BTC));
+mod bot;
 
-  match test {
-    Ok(x) => print!("It worked: {:?}", x),
-    Err(e) => print!("What a failure {:?}", e),
-  }
+#[derive(Serialize, Deserialize, Default)]
+struct BinanceConfig {
+  api_key: String,
+  api_secret: String,
+}
+
+fn main() -> Result<(), confy::ConfyError> {
+  let config: BinanceConfig = confy::load("coward-bot")?;
+  let exchange = Binance::create(
+    &config.api_key,
+    &config.api_secret,
+    BinanceEnvironment::Live,
+  );
+
+  let bot = bot::CowardBot::create(exchange);
+
+  bot.run();
+
+  Ok(())
 }
