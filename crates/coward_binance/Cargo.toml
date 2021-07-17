@@ -1,0 +1,19 @@
+[package]
+name = "coward_binance"
+version = "0.1.0"
+authors = ["Jerahmeel Cosinas <me@jerahmeelcosinas.net>"]
+edition = "2018"
+
+
+[dependencies]
+coward_exchange = { path = "../coward_exchange", version = "0.1.0" }
+rust_decimal = "1.14"
+rust_decimal_macros = "1.14"
+serde = { version = "1.0", features = ["derive"] }
+hmac = "0.11"
+sha2 = "0.9"
+
+# inline with the theme, we'll shy away from async http clients
+# mainly because we want a nice clean trait for aesthetics and general happiness
+# https://smallcultfollowing.com/babysteps/blog/2019/10/26/async-fn-in-traits-are-hard/
+reqwest = { version = "0.11", features = ["blocking", "json"] }
